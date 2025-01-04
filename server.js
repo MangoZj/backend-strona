@@ -1,44 +1,46 @@
-require("dotenv").config(); 
-const express = require("express");
-const mongoose = require("mongoose");
-const cloudinary = require("cloudinary").v2;
-const cors = require("cors");
-const bodyParser = require("body-parser");
+require('dotenv').config(); // Załadowanie zmiennych środowiskowych z pliku .env
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors'); // Obsługa CORS
+const bodyParser = require('body-parser'); // Parsowanie JSON w żądaniach
 
-const app = express(); 
-const PORT = process.env.PORT || 3000; 
+const app = express();
+const PORT = process.env.PORT || 3001; // Port serwera
 
-app.use(cors());
-app.use(bodyParser.json()); 
-app.use(bodyParser.urlencoded({ extended: true })); 
+// Middleware
+app.use(cors()); // Umożliwia dostęp do API z innych domen
+app.use(bodyParser.json()); // Parsowanie JSON w żądaniach
+app.use(bodyParser.urlencoded({ extended: true })); // Obsługa danych w formularzach
 
+// MongoDB Connection
 mongoose
-    .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log("Połączono z MongoDB"))
-    .catch((err) => console.error("Błąd połączenia z MongoDB:", err));
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('Połączono z MongoDB');
+  })
+  .catch((err) => {
+    console.error('Błąd połączenia z MongoDB:', err.message);
+  });
 
-    cloudinary.config({
-        cloud_name: process.env.CLOUD_NAME,
-        api_key: process.env.CLOUD_API_KEY,
-        api_secret: process.env.CLOUD_API_SECRET,
-    });
+// Testowy endpoint API
+app.get('/api/test', (req, res) => {
+  res.send('API działa!');
+});
 
-    app.get("/", (req, res) => {
-        res.send("Serwer działa!");
-    });
+// Endpoint dla Cloudinary (przesyłanie obrazów)
+app.post('/api/upload', (req, res) => {
+  const { image } = req.body; // Oczekiwany URL obrazu w żądaniu
+  const cloudinary = require('cloudinary').v2;
 
-    app.post("/upload", (req, res) => {
-        const file = req.body.image; 
-        cloudinary.uploader.upload(file, (err, result) => {
-            if (err) {
-                res.status(500).send("Błąd przesyłania obrazu");
-            } else {
-                res.status(200).send({ url: result.secure_url });
-            }
-        });
-    });
-    
-    app.listen(PORT, () => {
-        console.log(`Serwer działa na porcie ${PORT}`);
-    });
-    
+  cloudinary.uploader.upload(image, { folder: 'your-folder-name' }, (error, result) => {
+    if (error) {
+      return res.status(500).json({ error: 'Błąd podczas przesyłania obrazu' });
+    }
+    res.status(200).json({ url: result.secure_url });
+  });
+});
+
+// Uruchomienie serwera
+app.listen(PORT, () => {
+  console.log(`Serwer działa na porcie ${PORT}`);
+});
