@@ -44,3 +44,7 @@ app.post('/api/upload', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Serwer działa na porcie ${PORT}`);
 });
+app.get('/', (req, res) => {
+  res.send('API działa! Witamy na stronie głównej.');
+});
+
